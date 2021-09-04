@@ -1,0 +1,1 @@
+worker: python3 main_bot.py & python3 likes.py
