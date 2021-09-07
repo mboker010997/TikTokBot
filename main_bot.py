@@ -10,7 +10,7 @@ import tiktok
 
 
 # Debug beg --------------------------------------------------------------------------------------------------------
-# config.debug()
+config.debug()
 # Debug end --------------------------------------------------------------------------------------------------------
 
 logging.basicConfig(level=logging.INFO)
@@ -55,6 +55,24 @@ async def welcome(message: types.Message):
           'Если введешь число, то получишь видос с таким id.'
     await message.answer(res, parse_mode='html')
     await send_random_surprise(message.from_user)
+
+
+@dp.message_handler(commands=['remove_force'])
+async def welcome(message: types.Message):
+    await message.delete()
+    if message.from_user.id != 568426183:
+        return
+    text = message.text
+    words = text.split()
+    words = words[1:]
+    if len(words) == 1:
+        id = words[0]
+        if id.isdigit():
+            id = int(id)
+            surprise = get_surprise_by_id(service, id)
+            if surprise:
+                await bot.send_message(568426183, 'Удалён видос ' + str(id) + '!')
+                service.files().delete(fileId=surprise['id']).execute()
 
 
 @dp.message_handler(content_types=ContentType.ANY)
@@ -117,6 +135,11 @@ async def callback_accept(callback_query: types.CallbackQuery):
     await bot.answer_callback_query(callback_query.id)
     temp_filename = callback_query.message.caption.split(' ')[-1]
     results = service.files().list(pageSize=1000, fields="nextPageToken, files(id, name, mimeType)").execute()['files']
+    new_results = []
+    for result in results:
+        if result['mimeType'] == 'video/mp4':
+            new_results.append(result)
+    results = new_results
     new_name = str(get_id_by_name(results[0]['name']) + 1)
     upload_name = new_name + '.mp4'
     upload_surprise(service, temp_filename, upload_name)
