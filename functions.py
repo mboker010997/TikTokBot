@@ -48,7 +48,7 @@ def get_random_prior(user_id):
 
 
 def get_random_surprise(prior, user_id):
-    data = select("select * from `surprise` where `prior` = {0}".format(prior))
+    data = select("select * from `surprises` where `prior` = {0}".format(prior))
     viewed = select("select * from `views` where `user_id` = {0}".format(user_id))
     if len(viewed) != 0:
         viewed = viewed[0]['videos'].split(', ')
@@ -98,7 +98,7 @@ def get_name_newfile(dir):
 
 
 def get_new_surprise_id():
-    data = select("select * from `surprise` order by `id`")
+    data = select("select * from `surprises` order by `id`")
     return int(data[-1]['name']) + 1
 
 
