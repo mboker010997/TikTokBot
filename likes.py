@@ -1,5 +1,5 @@
 from asyncio import sleep
-import config
+from config import *
 from aiogram import Bot, Dispatcher, types, executor
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ContentType
 

@@ -105,7 +105,7 @@ def get_new_surprise_id():
 def upload_surprise(service, filename, upload_name):
     file_metadata = {
         'name': upload_name,
-        'parents': [folder_id]
+        'parents': [config.folder_id]
     }
     media = MediaFileUpload(filename, mimetype='video/mp4')
     file = service.files().create(body=file_metadata, media_body=media, fields='id').execute()

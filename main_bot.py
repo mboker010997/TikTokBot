@@ -1,6 +1,6 @@
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
-import config
+# from config import Config
 from functions import *
 import logging
 from aiogram import Bot, Dispatcher, types, executor
@@ -8,12 +8,17 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ContentTyp
 import likes
 import tiktok
 
+
+# Debug beg --------------------------------------------------------------------------------------------------------
+config.debug()
+# Debug end --------------------------------------------------------------------------------------------------------
+
 logging.basicConfig(level=logging.INFO)
 bot = Bot(token=config.token)
 dp = Dispatcher(bot)
 
 credentials = service_account.Credentials.from_service_account_file(
-        SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+        config.SERVICE_ACCOUNT_FILE, scopes=config.SCOPES)
 service = build('drive', 'v3', credentials=credentials)
 
 inline_next = InlineKeyboardButton('Next', callback_data='next')
