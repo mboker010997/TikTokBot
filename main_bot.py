@@ -152,7 +152,8 @@ async def callback_accept(callback_query: types.CallbackQuery):
 async def callback_prior_choice(callback_query: types.CallbackQuery):
     await bot.answer_callback_query(callback_query.id)
     temp_filename = callback_query.message.caption.split(' ')[-1]
-    os.remove(temp_filename)
+    if os.path.exists(temp_filename):
+        os.remove(temp_filename)
     await callback_query.message.delete()
 
 
