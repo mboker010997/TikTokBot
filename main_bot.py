@@ -1,6 +1,5 @@
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
-# from config import Config
 from functions import *
 import logging
 from aiogram import Bot, Dispatcher, types, executor
@@ -10,7 +9,7 @@ import tiktok
 
 
 # Debug beg --------------------------------------------------------------------------------------------------------
-# config.debug()
+config.debug()
 # Debug end --------------------------------------------------------------------------------------------------------
 
 logging.basicConfig(level=logging.INFO)
@@ -39,11 +38,10 @@ surprise_count = get_new_surprise_id()
 
 
 async def send_random_surprise(user):
-    results = service.files().list(pageSize=1000, fields="nextPageToken, files(id, name, mimeType)").execute()['files']
-    num = randint(0, len(results) - 1)
-    surprise = results[num]
+    surprise = get_random_surprise(user.id)
     filename = 'temp/' + get_name_newfile('temp/') + '.mp4'
-    download_surprise(service, surprise['id'], filename)
+    download_surprise(service, surprise['file_id'], filename)
+    add_view(surprise['id'], user.id, user.full_name)
     with open(filename, 'rb') as video:
         await bot.send_video(user.id, video, caption=str(get_id_by_name(surprise['name'])), reply_markup=inline_video_kb)
     os.remove(filename)
@@ -58,7 +56,7 @@ async def welcome(message: types.Message):
 
 
 @dp.message_handler(commands=['remove_force'])
-async def welcome(message: types.Message):
+async def remove_force(message: types.Message):
     await message.delete()
     if message.from_user.id != 568426183:
         return
@@ -69,10 +67,11 @@ async def welcome(message: types.Message):
         id = words[0]
         if id.isdigit():
             id = int(id)
-            surprise = get_surprise_by_id(service, id)
+            surprise = get_surprise_by_id(id)
             if surprise:
                 await bot.send_message(568426183, 'Удалён видос ' + str(id) + '!')
-                service.files().delete(fileId=surprise['id']).execute()
+                service.files().delete(fileId=surprise['file_id']).execute()
+                remove_force_surprise(surprise['id'])
 
 
 @dp.message_handler(content_types=ContentType.ANY)
@@ -90,15 +89,16 @@ async def lalala(message: types.Message):
             return
         if text.isdigit():
             id = int(text)
-            surprise = get_surprise_by_id(service, id)
+            surprise = get_surprise_by_id(id)
             if not surprise:
                 await send_random_surprise(message.from_user)
             else:
                 filename = 'temp/' + get_name_newfile('temp/') + '.mp4'
-                download_surprise(service, surprise['id'], filename)
+                download_surprise(service, surprise['file_id'], filename)
                 with open(filename, 'rb') as video:
                     await bot.send_video(message.from_user.id, video, caption=str(get_id_by_name(surprise['name'])), reply_markup=inline_video_kb)
-                os.remove(filename)
+                    add_view(surprise['id'], message.from_user.id, message.from_user.full_name)
+                soft_delete(filename)
         else:
             await send_random_surprise(message.from_user)
 
@@ -113,15 +113,15 @@ async def callback_next(callback_query: types.CallbackQuery):
 async def callback_like(callback_query: types.CallbackQuery):
     await bot.answer_callback_query(callback_query.id)
     id = callback_query.message.caption
-    surprise = get_surprise_by_id(service, id)
+    surprise = get_surprise_by_id(id)
     filename = 'temp/' + get_name_newfile('temp/') + '.mp4'
-    download_surprise(service, surprise['id'], filename)
+    download_surprise(service, surprise['file_id'], filename)
     with open(filename, 'rb') as video:
         try:
             await likes.likes_bot.send_video(callback_query.from_user.id, video, caption=id, reply_markup=likes.inline_likes_kb)
         except Exception as e:
             await bot.send_message(callback_query.from_user.id, "Запустите бота @likes_inforesult_bot!")
-    os.remove(filename)
+    soft_delete(filename)
 
 
 @dp.callback_query_handler(lambda c: c.data == 'delete')
@@ -134,16 +134,12 @@ async def callback_delete(callback_query: types.CallbackQuery):
 async def callback_accept(callback_query: types.CallbackQuery):
     await bot.answer_callback_query(callback_query.id)
     temp_filename = callback_query.message.caption.split(' ')[-1]
-    results = service.files().list(pageSize=1000, fields="nextPageToken, files(id, name, mimeType)").execute()['files']
-    new_results = []
-    for result in results:
-        if result['mimeType'] == 'video/mp4':
-            new_results.append(result)
-    results = new_results
-    new_name = str(get_id_by_name(results[0]['name']) + 1)
+    last_id = add_new_row('surprises')
+    new_name = str(last_id)
     upload_name = new_name + '.mp4'
-    upload_surprise(service, temp_filename, upload_name)
-    os.remove(temp_filename)
+    file_id = upload_surprise(service, temp_filename, upload_name)
+    soft_delete(temp_filename)
+    update_surprise(last_id, upload_name, file_id)
     await bot.send_message(568426183, 'Добавлен видос ' + new_name)
     await callback_query.message.delete()
 
@@ -152,8 +148,7 @@ async def callback_accept(callback_query: types.CallbackQuery):
 async def callback_prior_choice(callback_query: types.CallbackQuery):
     await bot.answer_callback_query(callback_query.id)
     temp_filename = callback_query.message.caption.split(' ')[-1]
-    if os.path.exists(temp_filename):
-        os.remove(temp_filename)
+    soft_delete(temp_filename)
     await callback_query.message.delete()
 
 
