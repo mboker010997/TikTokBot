@@ -52,6 +52,17 @@ async def welcome(message: types.Message):
     await send_random_surprise(message.from_user)
 
 
+@dp.message_handler(commands=['remove'])
+async def remove_surprise(message: types.Message):
+    text = message.text
+    words = text.split()
+    words = words[1:]
+    if len(words) == 1:
+        id = words[0]
+        if id.isdigit():
+
+
+
 @dp.message_handler(content_types=ContentType.ANY)
 async def lalala(message: types.Message):
     text = message.text
