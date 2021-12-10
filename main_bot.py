@@ -79,11 +79,21 @@ async def lalala(message: types.Message):
     text = message.text
     await message.delete()
     temp_filename = 'temp/' + get_name_newfile('temp/') + '.mp4'
-    if tiktok.download_tiktok(text, temp_filename):
-        with open(temp_filename, 'rb') as video:
-            caption = (message.from_user.username + ' ' if message.from_user.username else '') + message.from_user.full_name + '\n '
-            caption += temp_filename
-            await bot.send_video(568426183, video, caption=caption, reply_markup=inline_suggest_kb)
+    if text[0:4] == "http":
+        iter = 0
+        while not tiktok.download_tiktok(text, temp_filename):
+            with open(temp_filename, 'rb') as video:
+                last_id = add_new_row('surprises')
+                new_name = str(last_id)
+                upload_name = new_name + '.mp4'
+                file_id = upload_surprise(service, temp_filename, upload_name)
+                soft_delete(temp_filename)
+                # update_surprise(last_id, upload_name, file_id)
+                await bot.send_message(568426183, 'Добавлен видос ' + new_name)
+            iter += 1
+            if iter > 20:
+                await bot.send_message(568426183, "Не удалось загрузить видос по ссылке(")
+                break
     else:
         if message.content_type != 'text':
             return
@@ -139,7 +149,7 @@ async def callback_accept(callback_query: types.CallbackQuery):
     upload_name = new_name + '.mp4'
     file_id = upload_surprise(service, temp_filename, upload_name)
     soft_delete(temp_filename)
-    update_surprise(last_id, upload_name, file_id)
+    # update_surprise(last_id, upload_name, file_id)
     await bot.send_message(568426183, 'Добавлен видос ' + new_name)
     await callback_query.message.delete()
 
