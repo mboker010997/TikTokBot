@@ -79,11 +79,12 @@ async def welcome(message: types.Message):
 async def lalala(message: types.Message):
     if message.content_type != 'text':
         return
-    print("mbo")
+    # print("mbo")
     text = message.text
     await message.delete()
     temp_filename = 'temp/' + get_name_newfile('temp/') + '.mp4'
-    if len(text) >= 4 and text[0:3] == "http":
+    if len(text) >= 4 and text[0:4] == "http":
+        # print("link")
         iter = 0
         ok = True
         # await bot.send_message(568426183, 'Видос скачивается')
@@ -94,7 +95,7 @@ async def lalala(message: types.Message):
                 await bot.send_message(568426183, "Не удалось загрузить видос по ссылке " + text)
                 break
         if ok:
-            await bot.send_message(568426183, 'Видос скачался')
+            # await bot.send_message(568426183, 'Видос скачался')
             results = service.files().list(pageSize=1000, fields="nextPageToken, files(id, name, mimeType)").execute()[
                 'files']
             new_results = []
@@ -109,6 +110,8 @@ async def lalala(message: types.Message):
             await bot.send_message(568426183, 'Добавлен видос ' + new_name)
 
     else:
+        # print('text')
+        # print(text, text[0:3])
         if text.isdigit():
             id = int(text)
             surprise = get_surprise_by_id(service, id)
