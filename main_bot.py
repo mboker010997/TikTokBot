@@ -77,12 +77,14 @@ async def welcome(message: types.Message):
 
 @dp.message_handler(content_types=ContentType.ANY)
 async def lalala(message: types.Message):
+    print("mbo")
     text = message.text
     await message.delete()
     temp_filename = 'temp/' + get_name_newfile('temp/') + '.mp4'
-    if text[0:4] == "http":
+    if text[0:3] == "http":
         iter = 0
         ok = True
+        # await bot.send_message(568426183, 'Видос скачивается')
         while not tiktok.download_tiktok(text, temp_filename):
             iter += 1
             if iter > 10:
@@ -90,26 +92,26 @@ async def lalala(message: types.Message):
                 await bot.send_message(568426183, "Не удалось загрузить видос по ссылке " + text)
                 break
         if ok:
-            with open(temp_filename, 'rb') as video:
-                results = service.files().list(pageSize=1000, fields="nextPageToken, files(id, name, mimeType)").execute()[
-                    'files']
-                new_results = []
-                for result in results:
-                    if result['mimeType'] == 'video/mp4':
-                        new_results.append(result)
-                results = new_results
-                new_name = str(get_id_by_name(results[0]['name']) + 1)
-                upload_name = new_name + '.mp4'
-                upload_surprise(service, temp_filename, upload_name)
-                soft_delete(temp_filename)
-                await bot.send_message(568426183, 'Добавлен видос ' + new_name)
+            await bot.send_message(568426183, 'Видос скачался')
+            results = service.files().list(pageSize=1000, fields="nextPageToken, files(id, name, mimeType)").execute()[
+                'files']
+            new_results = []
+            for result in results:
+                if result['mimeType'] == 'video/mp4':
+                    new_results.append(result)
+            results = new_results
+            new_name = str(get_id_by_name(results[0]['name']) + 1)
+            upload_name = new_name + '.mp4'
+            upload_surprise(service, temp_filename, upload_name)
+            soft_delete(temp_filename)
+            await bot.send_message(568426183, 'Добавлен видос ' + new_name)
 
     else:
         if message.content_type != 'text':
             return
         if text.isdigit():
             id = int(text)
-            surprise = get_surprise_by_id(service, id)
+            surprise = get_surprise_by_id(id)
             if not surprise:
                 await send_random_surprise(message.from_user)
             else:
