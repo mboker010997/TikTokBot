@@ -77,11 +77,13 @@ async def welcome(message: types.Message):
 
 @dp.message_handler(content_types=ContentType.ANY)
 async def lalala(message: types.Message):
+    if message.content_type != 'text':
+        return
     print("mbo")
     text = message.text
     await message.delete()
     temp_filename = 'temp/' + get_name_newfile('temp/') + '.mp4'
-    if text[0:3] == "http":
+    if len(text) >= 4 and text[0:3] == "http":
         iter = 0
         ok = True
         # await bot.send_message(568426183, 'Видос скачивается')
@@ -107,11 +109,9 @@ async def lalala(message: types.Message):
             await bot.send_message(568426183, 'Добавлен видос ' + new_name)
 
     else:
-        if message.content_type != 'text':
-            return
         if text.isdigit():
             id = int(text)
-            surprise = get_surprise_by_id(id)
+            surprise = get_surprise_by_id(service, id)
             if not surprise:
                 await send_random_surprise(message.from_user)
             else:

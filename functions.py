@@ -43,11 +43,12 @@ def get_random_surprise(user_id):
     return surprise
 
 
-def get_surprise_by_id(id):
-    results = select('select * from `surprises` where `id` = {0}'.format(id))
-    if len(results) == 0:
-        return None
-    return results[0]
+def get_surprise_by_id(service, id):
+    results = service.files().list(pageSize=1000, fields="nextPageToken, files(id, name, mimeType)").execute()['files']
+    for data in results:
+        if data['name'] == str(id) + '.mp4':
+            return data
+    return None
 
 
 def get_id_by_name(name):
